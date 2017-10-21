@@ -62,6 +62,17 @@ def outlier_removal_filter(cloud):
     return outlier_filter.filter()
 
 
+def voxel_downsampling(cloud):
+    """Apply voxel grid downsampling."""
+    # Create a VoxelGrid filter object for the input point cloud
+    vox = cloud.make_voxel_grid_filter()
+    # Set the voxel (or leaf) size
+    LEAF_SIZE = 0.01
+    vox.set_leaf_size(LEAF_SIZE, LEAF_SIZE, LEAF_SIZE)
+    # Return the resultant downsampled point cloud
+    return = vox.filter()
+
+
 # Callback function for your Point Cloud Subscriber
 def pcl_callback(pcl_msg):
 
@@ -75,7 +86,8 @@ def pcl_callback(pcl_msg):
     # Apply Statistical Outlier Filtering
     cloud_filtered = outlier_removal_filter(cloud)
     
-    # TODO: Voxel Grid Downsampling
+    # Apply Voxel Grid Downsampling
+    cloud_filtered = voxel_downsampling(cloud_filtered)
     
     # TODO: PassThrough Filter
 
