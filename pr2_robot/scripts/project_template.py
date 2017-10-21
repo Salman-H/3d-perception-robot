@@ -166,7 +166,13 @@ def pcl_callback(pcl_msg):
     extracted_inliers = cloud_filtered.extract(inliers, negative=False)
     extracted_outliers = cloud_filtered.extract(inliers, negative=True)
 
-    # TODO: Convert PCL data to ROS messages
+    # Apply Eculidian clustering on extracted outliers (table objects)
+    cluster_cloud = euclidean_clustering(extracted_outliers)
+
+    # Convert PCL data to ROS messages
+    ros_cloud_objects = pcl_to_ros(extracted_outliers)
+    ros_cloud_table = pcl_to_ros(extracted_inliers)
+    ros_cluster_cloud = pcl_to_ros(cluster_cloud)
 
     # TODO: Publish ROS messages
 
