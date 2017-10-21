@@ -51,7 +51,10 @@ def pcl_callback(pcl_msg):
 
 # Exercise-2 TODOs:
 
-    # TODO: Convert ROS msg to PCL data
+    # Convert ROS msg to PCL data
+    # To process camera point cloud, need to convert it from received ROS 
+    # message (in PointCloud2 fromat) to a PCL format for python-pcl.
+    cloud = ros_to_pcl(pcl_msg)
     
     # TODO: Statistical Outlier Filtering
 
