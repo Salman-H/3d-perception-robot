@@ -136,7 +136,8 @@ def pr2_mover(object_list):
 
 if __name__ == '__main__':
 
-    # TODO: ROS node initialization
+    # Initialize a new ROS node called perception
+    rospy.init_node('perception', anonymous=True)
 
     # TODO: Create Subscribers
 
