@@ -76,7 +76,7 @@ def voxel_downsampling(cloud):
 def passthrough_filter(cloud):
     """Apply a pass through filter."""
     # Create a passthrough filter object
-    passthrough = cloud_filtered.make_passthrough_filter()
+    passthrough = cloud.make_passthrough_filter()
     # Assign axis and range to the passthrough filter object.
     passthrough.set_filter_field_name('z')
     axis_min = 0.76
@@ -84,6 +84,21 @@ def passthrough_filter(cloud):
     passthrough.set_filter_limits(axis_min, axis_max)
     # Return the resultant point cloud
     return passthrough.filter()
+
+
+def plane_segmentation(cloud):
+    """Apply a RANSAC plane segmentation."""
+    # Create a segmentation object
+    seg = cloud.make_segmenter()
+    # Set the desired model: PLANE chosen to segment the table out
+    seg.set_model_type(pcl.SACMODEL_PLANE)
+    seg.set_method_type(pcl.SAC_RANSAC)
+    # Max distance for a point to be considered fitting the model (a plane)
+    max_distance = 0.01
+    seg.set_distance_threshold(max_distance)
+    # Return the set of inlier indices and model coefficients
+    inliers, coefficients = seg.segment()
+    return inliers, coefficients
 
 
 # Callback function for your Point Cloud Subscriber
@@ -105,9 +120,14 @@ def pcl_callback(pcl_msg):
     # Apply a pass through filter
     cloud_filtered = passthrough_filter(cloud_filtered)
 
-    # TODO: RANSAC Plane Segmentation
+    # Apply RANSAC Plane Segmentation to obtain inlier indices and model coeff.
+    inliers, coefficients = plane_segmentation(cloud_filtered)
 
-    # TODO: Extract inliers and outliers
+    # Extract inliers and outliers
+    # negative=False: extract only the subset of points that fit model (inliers)
+    # negative=True: extract subset of points that did not fit the model (outliers)
+    extracted_inliers = cloud_filtered.extract(inliers, negative=False)
+    extracted_outliers = cloud_filtered.extract(inliers, negative=True)
 
     # TODO: Euclidean Clustering
 
