@@ -46,6 +46,22 @@ def send_to_yaml(yaml_filename, dict_list):
     with open(yaml_filename, 'w') as outfile:
         yaml.dump(data_dict, outfile, default_flow_style=False)
 
+
+def outlier_removal_filter(cloud):
+    """Apply a statistical outlier removal filter."""
+    # Make a filter object
+    outlier_filter = cloud.make_statistical_outlier_filter()
+    NEIGHBORS = 50
+    THRESHOLD = 1.0
+    # Set the number of neighboring points to analyze for any given point
+    outlier_filter.set_mean_k(NEIGHBORING_POINTS)
+    # Any point with a mean distance larger than global
+    # (mean distance+THRESHOLD*std_dev) will be considered outlier
+    outlier_filter.set_std_dev_mul_thresh(THRESHOLD)
+    # Call the filter function too apply filter
+    return outlier_filter.filter()
+
+
 # Callback function for your Point Cloud Subscriber
 def pcl_callback(pcl_msg):
 
@@ -56,10 +72,11 @@ def pcl_callback(pcl_msg):
     # message (in PointCloud2 fromat) to a PCL format for python-pcl.
     cloud = ros_to_pcl(pcl_msg)
     
-    # TODO: Statistical Outlier Filtering
-
+    # Apply Statistical Outlier Filtering
+    cloud_filtered = outlier_removal_filter(cloud)
+    
     # TODO: Voxel Grid Downsampling
-
+    
     # TODO: PassThrough Filter
 
     # TODO: RANSAC Plane Segmentation
