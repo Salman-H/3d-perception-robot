@@ -73,6 +73,19 @@ def voxel_downsampling(cloud):
     return = vox.filter()
 
 
+def passthrough_filter(cloud):
+    """Apply a pass through filter."""
+    # Create a passthrough filter object
+    passthrough = cloud_filtered.make_passthrough_filter()
+    # Assign axis and range to the passthrough filter object.
+    passthrough.set_filter_field_name('z')
+    axis_min = 0.76
+    axis_max = 1.1
+    passthrough.set_filter_limits(axis_min, axis_max)
+    # Return the resultant point cloud
+    return passthrough.filter()
+
+
 # Callback function for your Point Cloud Subscriber
 def pcl_callback(pcl_msg):
 
@@ -89,7 +102,8 @@ def pcl_callback(pcl_msg):
     # Apply Voxel Grid Downsampling
     cloud_filtered = voxel_downsampling(cloud_filtered)
     
-    # TODO: PassThrough Filter
+    # Apply a pass through filter
+    cloud_filtered = passthrough_filter(cloud_filtered)
 
     # TODO: RANSAC Plane Segmentation
 
