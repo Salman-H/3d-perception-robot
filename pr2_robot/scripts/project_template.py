@@ -173,4 +173,7 @@ if __name__ == '__main__':
     # Initialize color_list
     get_color_list.color_list = []
 
-    # TODO: Spin while node is not shutdown
+    # Spin while node is not shutdown
+    # Prevents node from exiting until an intentional shutdown is invoked
+    while not rospy.is_shutdown():
+        rospy.spin()
