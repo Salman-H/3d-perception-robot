@@ -139,7 +139,12 @@ if __name__ == '__main__':
     # Initialize a new ROS node called perception
     rospy.init_node('perception', anonymous=True)
 
-    # TODO: Create Subscribers
+    # Subsribe the newly initialized node to the camera data (point cloud) 
+    # topic "/pr2/world/points". Anytime a pcl message arrives, the message
+    # data (a point cloud) from the PR2 robot will be passed to the 
+    # pcl_callback() function for processing.
+    pcl_sub = rospy.Subscriber("/pr2/world/points",
+                                pc2.PointCloud2, pcl_callback, queue_size=1)
 
     # TODO: Create Publishers
 
