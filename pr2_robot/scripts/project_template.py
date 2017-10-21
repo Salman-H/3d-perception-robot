@@ -101,6 +101,43 @@ def plane_segmentation(cloud):
     return inliers, coefficients
 
 
+def euclidean_clustering(object_cloud):
+    """Apply Euclidean clustering to segment cloud into individual objects."""
+    # PCL's Euclidean Clustering algorithm requires a point cloud with only
+    # spatial information
+    white_cloud = XYZRGB_to_XYZ(object_cloud)
+    # The k-d tree data structure is used in the Euclidian Clustering algorithm
+    # to decrease the computational burden of searching for neighboring points.
+    # While other efficient algorithms/data structures for nearest neighbor search
+    # exist, PCL's Euclidian Clustering algorithm only supports k-d trees.
+    tree = white_cloud.make_kdtree()
+    # Create a cluster extraction object
+    ec = white_cloud.make_EuclideanClusterExtraction()
+    # Set tolerances for distance threshold as well as min/max cluster size (in points)
+    # These parameters are to be tweaked to find values that work for segmenting objects.
+    ec.set_ClusterTolerance(0.05)
+    ec.set_MinClusterSize(50)
+    ec.set_MaxClusterSize(1700)
+    # Search the k-d tree for clusters
+    ec.set_SearchMethod(tree)
+    # Extract indices for each of the discovered clusters
+    cluster_indices = ec.Extract()
+    # Create Cluster-Mask Point Cloud to visualize each cluster separately
+    # Assign a color corresponding to each segmented object in scene
+    cluster_color = get_color_list(len(cluster_indices))
+    color_cluster_point_list = []
+    for j, indices in enumerate(cluster_indices):
+        for i, indice in enumerate(indices):
+            color_cluster_point_list.append([white_cloud[indice][0],
+                                            white_cloud[indice][1],
+                                            white_cloud[indice][2],
+                                             rgb_to_float(cluster_color[j])])
+    #Create new cloud containing all clusters, each with unique color
+    cluster_cloud = pcl.PointCloud_PointXYZRGB()
+    cluster_cloud.from_list(color_cluster_point_list)
+    return cluster_cloud
+
+
 # Callback function for your Point Cloud Subscriber
 def pcl_callback(pcl_msg):
 
@@ -128,10 +165,6 @@ def pcl_callback(pcl_msg):
     # negative=True: extract subset of points that did not fit the model (outliers)
     extracted_inliers = cloud_filtered.extract(inliers, negative=False)
     extracted_outliers = cloud_filtered.extract(inliers, negative=True)
-
-    # TODO: Euclidean Clustering
-
-    # TODO: Create Cluster-Mask Point Cloud to visualize each cluster separately
 
     # TODO: Convert PCL data to ROS messages
 
