@@ -142,14 +142,48 @@ def euclidean_clustering(object_cloud):
     #Create new cloud containing all clusters, each with unique color
     cluster_cloud = pcl.PointCloud_PointXYZRGB()
     cluster_cloud.from_list(color_cluster_point_list)
-    return cluster_cloud
+
+    return cluster_cloud, cluster_indices
+
+
+def identify_clusters(cluster_indices, object_cloud, detected_objects):
+    """Classify each detected cluster by its predicted identification label."""
+    # Obtain a cloud with only spatial information
+    white_cloud = XYZRGB_to_XYZ(object_cloud)
+
+    # Iterate over each detected cluster
+    for index, pts_list in enumerate(cluster_indices):
+        # Grab the points for the cluster from the extracted outliers (cloud_objects)
+        pcl_cluster = object_cloud.extract(pts_list)
+        # convert the cluster from pcl to ROS using helper function
+        ros_cluster = pcl_to_ros(pcl_cluster)
+
+        # Extract histogram features
+        chists = compute_color_histograms(ros_cluster, using_hsv=True)
+        normals = get_normals(ros_cluster)
+        nhists = compute_normal_histograms(normals)
+        feature = np.concatenate((chists, nhists))
+
+        # Make the prediction, retrieve the label for the result
+        # and add it to detected_objects_labels list
+        prediction = clf.predict(scaler.transform(feature.reshape(1,-1)))
+        label = encoder.inverse_transform(prediction)[0]
+        detected_objects_labels.append(label)
+
+        # Publish a label into RViz
+        label_pos = list(white_cloud[pts_list[0]])
+        label_pos[2] += .4
+        object_markers_pub.publish(make_label(label,label_pos, index))
+
+        # Add the detected object to the list of detected objects
+        do = DetectedObject()
+        do.label = label
+        do.cloud = ros_cluster
+        detected_objects.append(do)
 
 
 # Callback function for your Point Cloud Subscriber
 def pcl_callback(pcl_msg):
-
-# Exercise-2 TODOs:
-
     # Convert ROS msg to PCL data
     # To process camera point cloud, need to convert it from received ROS 
     # message (in PointCloud2 fromat) to a PCL format for python-pcl.
@@ -174,7 +208,7 @@ def pcl_callback(pcl_msg):
     extracted_outliers = cloud_filtered.extract(inliers, negative=True)
 
     # Apply Eculidian clustering on extracted outliers (table objects)
-    cluster_cloud = euclidean_clustering(extracted_outliers)
+    cluster_cloud, cluster_indices = euclidean_clustering(extracted_outliers)
 
     # Convert PCL data to ROS messages
     ros_cloud_objects = pcl_to_ros(extracted_outliers)
@@ -186,19 +220,11 @@ def pcl_callback(pcl_msg):
     pcl_table_pub.publish(ros_cloud_table)
     pcl_cluster_pub.publish(ros_cluster_cloud)
 
-# Exercise-3 TODOs:
+    detected_objects_labels = []
+    detected_objects = []
 
-    # Classify the clusters! (loop through each detected cluster one at a time)
+    identify_clusters(cluster_indices, extracted_outliers, detected_objects)
 
-        # Grab the points for the cluster
-
-        # Compute the associated feature vector
-
-        # Make the prediction
-
-        # Publish a label into RViz
-
-        # Add the detected object to the list of detected objects.
 
     # Publish the list of detected objects
 
