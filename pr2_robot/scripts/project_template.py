@@ -277,7 +277,6 @@ def pr2_mover(object_list):
     # TODO: Output your request parameters into output yaml file
 
 
-
 if __name__ == '__main__':
 
     # Initialize a new ROS node called perception
@@ -299,7 +298,12 @@ if __name__ == '__main__':
     object_markers_pub = rospy.Publisher("/object_markers", Marker, queue_size=1)
     detected_objects_pub = rospy.Publisher("/detected_objects", DetectedObjectsArray, queue_size=1)
 
-    # TODO: Load Model From disk
+    # Load Model From disk
+    model = pickle.load(open('model.sav', 'rb'))
+    clf = model['classifier']
+    encoder = LabelEncoder()
+    encoder.classes_ = model['classes']
+    scaler = model['scaler']
 
     # Initialize color_list
     get_color_list.color_list = []
