@@ -51,8 +51,8 @@ def outlier_removal_filter(cloud):
     """Apply a statistical outlier removal filter."""
     # Make a filter object
     outlier_filter = cloud.make_statistical_outlier_filter()
-    NEIGHBORS = 50
-    THRESHOLD = 1.0
+    NEIGHBORS = 19
+    THRESHOLD = 0.25
     # Set the number of neighboring points to analyze for any given point
     outlier_filter.set_mean_k(NEIGHBORS)
     # Any point with a mean distance larger than global
@@ -67,7 +67,7 @@ def voxel_downsampling(cloud):
     # Create a VoxelGrid filter object for the input point cloud
     vox = cloud.make_voxel_grid_filter()
     # Set the voxel (or leaf) size
-    LEAF_SIZE = 0.01
+    LEAF_SIZE = 0.006
     vox.set_leaf_size(LEAF_SIZE, LEAF_SIZE, LEAF_SIZE)
     # Return the resultant downsampled point cloud
     return vox.filter()
@@ -76,14 +76,21 @@ def voxel_downsampling(cloud):
 def passthrough_filter(cloud):
     """Apply a pass through filter."""
     # Create a passthrough filter object
-    passthrough = cloud.make_passthrough_filter()
+    passthrough_z = cloud.make_passthrough_filter()
     # Assign axis and range to the passthrough filter object.
-    passthrough.set_filter_field_name('z')
-    axis_min = 0.76
-    axis_max = 1.1
-    passthrough.set_filter_limits(axis_min, axis_max)
+    passthrough_z.set_filter_field_name('z')
+    z_axis_min = 0.61
+    z_axis_max = 1.29
+    passthrough_z.set_filter_limits(z_axis_min, z_axis_max)
+    cloud_passthrough_z =  passthrough_z.filter()
+
+    passthrough_y = cloud_passthrough_z.make_passthrough_filter()
+    passthrough_y.set_filter_field_name('y')
+    y_axis_min = -0.5
+    y_axis_max = 0.5
+    passthrough_y.set_filter_limits(y_axis_min, y_axis_max)
     # Return the resultant point cloud
-    return passthrough.filter()
+    return passthrough_y.filter()
 
 
 def plane_segmentation(cloud):
@@ -115,9 +122,9 @@ def euclidean_clustering(object_cloud):
     ec = white_cloud.make_EuclideanClusterExtraction()
     # Set tolerances for distance threshold as well as min/max cluster size (in points)
     # These parameters are to be tweaked to find values that work for segmenting objects.
-    ec.set_ClusterTolerance(0.05)
-    ec.set_MinClusterSize(50)
-    ec.set_MaxClusterSize(1700)
+    ec.set_ClusterTolerance(0.02)
+    ec.set_MinClusterSize(21)
+    ec.set_MaxClusterSize(3000)
     # Search the k-d tree for clusters
     ec.set_SearchMethod(tree)
     # Extract indices for each of the discovered clusters
