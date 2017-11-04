@@ -146,7 +146,8 @@ def euclidean_clustering(object_cloud):
     return cluster_cloud, cluster_indices
 
 
-def identify_clusters(cluster_indices, object_cloud, detected_objects):
+def identify_clusters(cluster_indices, object_cloud,
+                      detected_objects, detected_objects_labels):
     """Classify each detected cluster by its predicted identification label."""
     # Obtain a cloud with only spatial information
     white_cloud = XYZRGB_to_XYZ(object_cloud)
@@ -223,10 +224,12 @@ def pcl_callback(pcl_msg):
     detected_objects_labels = []
     detected_objects = []
 
-    identify_clusters(cluster_indices, extracted_outliers, detected_objects)
+    identify_clusters(cluster_indices, extracted_outliers,
+                      detected_objects, detected_objects_labels)
 
     # Publish the list of detected objects
-    rospy.loginfo('Detected {} objects: {}'.format(len(detected_objects_labels), detected_objects_labels))
+    rospy.loginfo('Detected {} objects: {}'.format(len(detected_objects_labels),
+                                                    detected_objects_labels))
     detected_objects_pub.publish(detected_objects)
 
     # Suggested location for where to invoke your pr2_mover() function within pcl_callback()
