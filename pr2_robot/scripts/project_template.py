@@ -54,7 +54,7 @@ def outlier_removal_filter(cloud):
     NEIGHBORS = 50
     THRESHOLD = 1.0
     # Set the number of neighboring points to analyze for any given point
-    outlier_filter.set_mean_k(NEIGHBORING_POINTS)
+    outlier_filter.set_mean_k(NEIGHBORS)
     # Any point with a mean distance larger than global
     # (mean distance+THRESHOLD*std_dev) will be considered outlier
     outlier_filter.set_std_dev_mul_thresh(THRESHOLD)
@@ -70,7 +70,7 @@ def voxel_downsampling(cloud):
     LEAF_SIZE = 0.01
     vox.set_leaf_size(LEAF_SIZE, LEAF_SIZE, LEAF_SIZE)
     # Return the resultant downsampled point cloud
-    return = vox.filter()
+    return vox.filter()
 
 
 def passthrough_filter(cloud):
@@ -198,10 +198,12 @@ def pcl_callback(pcl_msg):
     # Suggested location for where to invoke your pr2_mover() function within pcl_callback()
     # Could add some logic to determine whether or not your object detections are robust
     # before calling pr2_mover()
+    """
     try:
         pr2_mover(detected_objects_list)
     except rospy.ROSInterruptException:
         pass
+    """
 
 # function to load parameters and request PickPlace service
 def pr2_mover(object_list):
