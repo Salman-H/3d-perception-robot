@@ -74,3 +74,29 @@ def compute_color_histograms(cloud, using_hsv=False):
     return normed_features
 
 
+def compute_normal_histograms(normal_cloud):
+    """Compute HSV histograms of normal values into a single feature vector."""
+    norm_x_vals = []
+    norm_y_vals = []
+    norm_z_vals = []
+
+    for norm_component in pc2.read_points(normal_cloud,
+                                          field_names = ('normal_x', 'normal_y', 'normal_z'),
+                                          skip_nans=True):
+        norm_x_vals.append(norm_component[0])
+        norm_y_vals.append(norm_component[1])
+        norm_z_vals.append(norm_component[2])
+
+    # Compute histograms of normal values (just like with color)
+    nbins = 32
+    bins_range = (-1, 1)
+    h_hist = np.histogram(norm_x_vals, bins=nbins)
+    s_hist = np.histogram(norm_y_vals, bins=nbins)
+    v_hist = np.histogram(norm_z_vals, bins=nbins)
+
+    # Concatenate the histograms into a single feature vector
+    hist_features = np.concatenate((h_hist[0], s_hist[0], v_hist[0])).astype(np.float64)
+    # Normalize the result
+    normed_features = hist_features / np.sum(hist_features)
+
+    return normed_features
