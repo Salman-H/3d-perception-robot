@@ -29,3 +29,9 @@ import numpy as np
 from pcl_helper import *
 
 
+def rgb_to_hsv(rgb_list):
+    """Convert a list of RGB colors into HSV colors."""
+    rgb_normalized = [1.0*rgb_list[0]/255, 1.0*rgb_list[1]/255, 1.0*rgb_list[2]/255]
+    hsv_normalized = matplotlib.colors.rgb_to_hsv([[rgb_normalized]])[0][0]
+    return hsv_normalized
+
