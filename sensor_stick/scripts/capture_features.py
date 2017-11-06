@@ -34,10 +34,13 @@ def get_normals(cloud):
 def photograph_models(models, shots):
     """Take pictures of each object model in tranining set."""
     TRIES = 5
+    print('\nnumber of shots per model: {}'.format(shots))
     for model_name in models:
+        print('\nmodel name: {}'.format(model_name))
         spawn_model(model_name)
         # For each object model, take number of pictures equal to shots
         for i in range(shots):
+            print('shot number: {}'.format(i))
             good_sample = False
             try_count = 0
             # For each model, make number of attempts equal to TRIES to get a
@@ -46,7 +49,7 @@ def photograph_models(models, shots):
                 sample_cloud = capture_sample()
                 sample_cloud_arr = ros_to_pcl(sample_cloud).to_array()
                 # Check for invalid clouds
-                if sample_cloud_arr.shap[0] == 0:
+                if sample_cloud_arr.shape[0] == 0:
                     print('Invalid cloud sample')
                     try_count += 1
                 else:
@@ -80,7 +83,7 @@ if __name__ == '__main__':
     labeled_features = []
 
     # Take pictures of each object model of interest with RGBD camera
-    NUM_SHOTS = 100
+    NUM_SHOTS = 1000
     photograph_models(models, NUM_SHOTS)
 
     # Construct training set
