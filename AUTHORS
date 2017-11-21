@@ -1,0 +1,41 @@
+# Primary Authors
+# As of Oct, 2017
+
+# project_template.py
+*       @salman-h
+*		@hvpandya
+*		@ryan-keenan
+
+# pcl_helper.py
+*       @hvpandya
+*		@ryan-keenan
+
+# train_svm.py
+*       @salman-h
+*		@ryan-keenan
+
+# features.py
+*       @salman-h
+
+# capture_features.py
+*        @salman-h
+*		 @ryan-keenan
+
+
+# Code Owners for Robotics Nanodegree Content
+# As of July, 7th 2017
+
+# Default Owner
+*       @ryan-keenan
+
+# 1. Content Developer
+*       @ryan-keenan
+
+# 2. Services Lead
+*       mike.salem@udacity.com
+
+# 3. Program Lead
+*       @cdlei
+
+# 4. Mike Wales
+*       @walesmd
