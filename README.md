@@ -6,20 +6,17 @@
 <img src="figures/gazebo_pr2.png" alt="" width="52%"><img src="figures/rviz_pr2_title.png" alt="" width="44.9%">
 </p>
 
-###Task 
-
+### Task 
 Object recognition of target objects from a collection of various objects in a cluttered environment.
 
-###Criteria
-
+### Criteria
 Minimum critera for object recognition in each test scene of RViz simulation is as follows:
 
 * test1.world - 100% (5/5)
 * test2.world - 80% (4/5)
 * test3.world - 75% (6/8)
 
-###Setup
-
+### Setup
 Create a ROS catkin workspace if haven't alreay
 
 ```sh
@@ -56,7 +53,7 @@ source ~/catkin_ws/devel/setup.bash
 
 The Perception pipeline consists of the following steps:
 
-#####Filtering and RANSAC plane fitting
+##### Filtering and RANSAC plane fitting
 The following filters are applied to the input point cloud in project_template.py:
 
 1. Statistical outlier removal filter
@@ -64,16 +61,16 @@ The following filters are applied to the input point cloud in project_template.p
 3. Passthrough filter
 4. RANSAC segmentation to segment table from objects
 
-#####Clustering for Segmentation
+##### Clustering for Segmentation
 The following steps are used to segment individual objects in project_template.py:
 
 5. Euclidean clustering to obtain individual objects
 6. Classification of each detected cluster by its predicted label
 
-<img src="figures/rviz_objects_test2_world.png" alt="" width="80%">
-<img src="figures/rviz_pcl_cluster_test2_world.png" alt="" width="80%">
+<img src="figures/rviz_objects_test2_world.png" alt="" width="">
+<img src="figures/rviz_pcl_cluster_test2_world.png" alt="" width="">
 
-#####Feature Extraction, SVM Training, Object Recognition
+##### Feature Extraction, SVM Training, Object Recognition
 The following steps are used to segment individual objects:
 
 7. Train a classification model on a set of objects of interest using an RGB-D camera. The trained model can then be used by the pr2_robot package for object recognition.
@@ -84,25 +81,20 @@ The following steps are used to segment individual objects:
 12. Camera shots are increased to 1000 in the photograph_models() method of  capture_features.py to improve training quality.
 
 Confusion matrices from training:
-<img src="figures/confusion_matrix.png" alt="" width="80%">
-<img src="figures/normalized_confusion_matrix.png" alt="" width="80%">
 
-###Results
-All objects from each of the three world scenes is identified:
+<img src="figures/confusion_matrix.png" alt="" width="65%">
+
+<img src="figures/normalized_confusion_matrix.png" alt="" width="65%">
+
+### Results
+Object recognition results from test worlds 1, 2 and 3 respectively are shown below. All objects from each of the three world scenes is identified. 
 <br>
-Object recognition in test1.world:
 <img src="figures/RViz_test_1_world.png" alt="" width="">
 <br>
-Object recognition in test2.world:
 <img src="figures/RViz_test_2_world.png" alt="" width="">
 <br>
-Object recognition in test3.world:
 <img src="figures/RViz_test_3_world.png" alt="" width="">
 
-###Improvements
+### Improvements
 Training can be improved by tuning the SVM parameters such as number of model snapshots. The project can be expanded by implementing pick-and-place kinematics.
-
-
-   
-
    
