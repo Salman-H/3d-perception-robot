@@ -43,7 +43,7 @@ def make_yaml_dict(test_scene_num, arm_name, object_name, pick_pose, place_pose)
 # Helper function to output to yaml file
 def send_to_yaml(yaml_filename, dict_list):
     data_dict = {"object_list": dict_list}
-    with open(yaml_filename, 'w') as outfile:
+    with open("./src/RoboND-Perception-Project/"+yaml_filename, 'w') as outfile:
         yaml.dump(data_dict, outfile, default_flow_style=False)
 
 
@@ -235,49 +235,101 @@ def pcl_callback(pcl_msg):
     # Suggested location for where to invoke your pr2_mover() function within pcl_callback()
     # Could add some logic to determine whether or not your object detections are robust
     # before calling pr2_mover()
-    """
     try:
-        pr2_mover(detected_objects_list)
+        pr2_mover(detected_objects)
     except rospy.ROSInterruptException:
         pass
-    """
 
-# function to load parameters and request PickPlace service
-def pr2_mover(object_list):
 
-    # TODO: Initialize variables
+def pr2_mover(detected_objects):
+    """Load object_list as parameters and request pick_place_routine service."""
 
-    # TODO: Get/Read parameters
+    # Initialize variables
+    labels = []
+    centroids = []  # to be list of tuples (x, y, z)
+    dropbox_dict = {}
+    # Create a list of dictionaries (made with make_yaml_dict()) for later output to yaml format
+    yaml_dict_list = []
+    TEST_SCENE_NUM = Int32()
+    TEST_SCENE_NUM.data = 2
 
-    # TODO: Parse parameters into individual variables
+    # Retrieve the object pick_list and dropbox yaml files from ROS parameter server
+    dropbox_param = rospy.get_param('/dropbox')
+    pick_list_param = rospy.get_param('/object_list')
 
+    # TODO: Parse pick_list object parameters into individual variables
     # TODO: Rotate PR2 in place to capture side tables for the collision map
 
-    # TODO: Loop through the pick list
+    # Iterate over the dropbox list (There are only 2 dropboxes for now)
+    for i in range(0, len(dropbox_param)):
+        # For each dropbox, add an entry to the dropbox dictionary of its name 
+        # as key and its position as value
+        dropbox_dict[dropbox_param[i]['name']] = dropbox_param[i]['position']
 
-        # TODO: Get the PointCloud for a given object and obtain it's centroid
+    # Iterate through the object pick list
+    for i in range(0, len(pick_list_param)):
+        # Initialize a variable and populate the data field
+        PICK_OBJECT_NAME = String()
+        PICK_OBJECT_GROUP = String()
+        WHICH_ARM = String()
+        PICK_OBJECT_NAME.data = pick_list_param[i]['name']
+        PICK_OBJECT_GROUP = pick_list_param[i]['group']
+        # initialize an empty pose message for a detected object corresponding
+        # to this pick object as well as for the drop boxes 
+        PICK_POSE = Pose()
+        PLACE_POSE = Pose()
 
-        # TODO: Create 'place_pose' for the object
+         # Assign the arm to be used for pick_place for this pick object
+        if PICK_OBJECT_GROUP == 'red':
+            WHICH_ARM.data = 'left'
+        elif PICK_OBJECT_GROUP == 'green':
+            WHICH_ARM.data = 'right'
+        else:
+            print("Error: Group color must be red or green!")
 
-        # TODO: Assign the arm to be used for pick_place
+        # Find the detected object specified by the pick object name
+        for detected_object in detected_objects:
+            if detected_object.label == PICK_OBJECT_NAME.data:
+                # Get the PointCloud for this detected object and obtain it's centroid
+                points_arr = ros_to_pcl(detected_object.cloud).to_array()
+                centroid = np.mean(points_arr, axis=0)[:3]
+                # Pass the centroid of the detected object as the pick_pose variable
+                # recasting it from type numpy.float64 to the native Python float
+                PICK_POSE.position.x = np.asscalar(centroid[0])
+                PICK_POSE.position.y = np.asscalar(centroid[1])
+                PICK_POSE.position.z = np.asscalar(centroid[2])
+                # Move on to the next pick object in the pick_list
+                break
 
-        # TODO: Create a list of dictionaries (made with make_yaml_dict()) for later output to yaml format
+        # Create 'place_pose' for the object i.e. the pose of the dropbox this
+        # object is to be placed in (from its group color)
+        # e.g. x coord of right drop box if object's group is red
+        PLACE_POSE.position.x = dropbox_dict[WHICH_ARM.data][0]
+        PLACE_POSE.position.y = dropbox_dict[WHICH_ARM.data][1]
+        PLACE_POSE.position.z = dropbox_dict[WHICH_ARM.data][2]
+
+        # Create a yaml friendly dictionary from ROS messages and append to yaml_dict_list
+        yaml_dict = make_yaml_dict(TEST_SCENE_NUM, WHICH_ARM, PICK_OBJECT_NAME, PICK_POSE, PLACE_POSE)
+        yaml_dict_list.append(yaml_dict)
 
         # Wait for 'pick_place_routine' service to come up
         rospy.wait_for_service('pick_place_routine')
-
+        """
         try:
             pick_place_routine = rospy.ServiceProxy('pick_place_routine', PickPlace)
 
             # TODO: Insert your message variables to be sent as a service request
-            resp = pick_place_routine(TEST_SCENE_NUM, OBJECT_NAME, WHICH_ARM, PICK_POSE, PLACE_POSE)
+            resp = pick_place_routine(TEST_SCENE_NUM, PICK_OBJECT_NAME, WHICH_ARM, PICK_POSE, PLACE_POSE)
 
             print ("Response: ",resp.success)
 
         except rospy.ServiceException, e:
             print "Service call failed: %s"%e
+        """
 
-    # TODO: Output your request parameters into output yaml file
+    # Output your request parameters into output yaml file
+    yaml_file = "output" + "_" + str(TEST_SCENE_NUM.data) + ".yaml"
+    send_to_yaml(yaml_file, yaml_dict_list)
 
 
 if __name__ == '__main__':
