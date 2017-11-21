@@ -6,6 +6,8 @@
 <img src="figures/gazebo_pr2.png" alt="" width="52%"><img src="figures/rviz_pr2_title.png" alt="" width="44.9%">
 </p>
 
+This project originated from Udacity's [PR2 3D Perception Project](https://github.com/udacity/RoboND-Perception-Project).
+
 ### Task 
 Object recognition of target objects from a collection of various objects in a cluttered environment.
 
