@@ -61,10 +61,10 @@ def compute_color_histograms(cloud, using_hsv=False):
 
     # Compute the histogram of the HSV channels separately
     nbins = 32
-    bins_range = (-1, 1)
-    h_hist = np.histogram(channel_1_vals, bins=nbins)
-    s_hist = np.histogram(channel_2_vals, bins=nbins)
-    v_hist = np.histogram(channel_3_vals, bins=nbins)
+    bins_range = (0, 256)
+    h_hist = np.histogram(channel_1_vals, bins=nbins, range=bins_range)
+    s_hist = np.histogram(channel_2_vals, bins=nbins, range=bins_range)
+    v_hist = np.histogram(channel_3_vals, bins=nbins, range=bins_range)
 
     # Concatenate and normalize the histograms into a single feature vector
     hist_features = np.concatenate((h_hist[0], s_hist[0], v_hist[0])).astype(np.float64)
