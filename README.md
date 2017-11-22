@@ -51,36 +51,34 @@ Add following to the .bashrc to auto-source all new terminals
 ```
 source ~/catkin_ws/devel/setup.bash
 ```
-###Implementation
+### Implementation
 
-The Perception pipeline consists of the following steps:
+To process camera image point cloud with python-pcl, it needs to be converted from a ROS message (in PointCloud2 format) to a PCL format. Subsequently, it is fed into the perception pipeline consisting of the following three main steps:
 
-##### Filtering and RANSAC plane fitting
+##### 1. Filtering and RANSAC plane fitting
 The following filters are applied to the input point cloud in project_template.py:
 
-1. Statistical outlier removal filter
-2. Voxel grid downsampling
-3. Passthrough filter
-4. RANSAC segmentation to segment table from objects
+1. Statistical Outlier Removal Filter
+2. Voxel Grid Downsampling
+3. Passthrough Filter
+4. RANSAC Segmentation
 
-##### Clustering for Segmentation
-The following steps are used to segment individual objects in project_template.py:
+The statistical outlier filter removes noise from the image pcl cloud. Any point with a mean distance larger than global mean distance + some threshold*std_dev is considered an outlier. Since there is  considerable noise in the incoming image, the threshold value is lowered as much as possible without removing desired object cloud data. Next, the image is downsampled using a voxel grid to save on memory and computational resources required to process the pcl image cloud. The voxel grid's leaf size is reduced accordingly through tweaking so that it's not reduced to a point where useful image data is lost. Subsequently, a pass-through filter is applied in the z and y directions to remove the table stand and drop-boxes and isolate only the tabletop and its objects. Finally, to obtain an object-only cloud, the tabletop is segmented from the objects with a RANSAC (Random Sample Consensus) plane segmenter. The maximum distance for a point to be considered fitting the RANSAC model (a plane) is obtained by trying different values.
 
-5. Euclidean clustering to obtain individual objects
-6. Classification of each detected cluster by its predicted label
+##### 2. Clustering for Segmentation
+The object cloud obtained from the previous process is clustered into individual objects using Euclidean clustering. The k-d tree data structure is used in the Euclidean Clustering algorithm to decrease the computational burden of searching for neighboring points. While other efficient algorithms/data structures for nearest neighbor search exist, PCL's Euclidean Clustering algorithm only supports k-d trees.The clustering parameters of min/max cluster size and cluster tolerance are tweaked to find values that work for segmenting objects. The k-d tree is then searched for clusters and indices extracted for each of the discovered clusters to create a cluster-mask Point Cloud to visualize each cluster separately. A new pcl cluster cloud is created containing all segmented object clusters in the scene, each with a unique color assigned to it for identification. The pcl cloud is then converted back to ROS messages which are published to the various ROS topics and visualized in RViz as shown below.
 
 <img src="figures/rviz_objects_test2_world.png" alt="" width="">
 <img src="figures/rviz_pcl_cluster_test2_world.png" alt="" width="">
 
-##### Feature Extraction, SVM Training, Object Recognition
-The following steps are used to segment individual objects:
+##### 3. Feature Extraction, SVM Training, Object Recognition
+The last step is to classify each detected cluster (in the previous step) by its predicted identification label. To achieve this, first a classification model is trained on a set of objects of interest using an RGB-D camera in the Gazebo simulation environment using the capture_features module. The trained model is then used by the pr2_robot package for object recognition. For each detected object, its features are obtained from computing color histograms. 
 
-7. Train a classification model on a set of objects of interest using an RGB-D camera. The trained model can then be used by the pr2_robot package for object recognition.
-8. Obtain object features from color histograms. A color histogram can be used to obtain features for identifying objects in a segmented point cloud. A classifier then can be trained on this feature set to recognize some object of interest in the point cloud. An HSV color space is used, as opposed to an RGB, as it is more resistant to lighting changes and more suited to perception tasks in robotics.
-9. Compute and concatenate HSV color histograms into a single feature vector and compute normalized HSV histograms in features.py.
-10. Capture model features with RGBD camera for training set in capture_features.py.
-11. Tran an SVM (Support Vector Machine) algorithm on captured features in capture_features.py.
-12. Camera shots are increased to 1000 in the photograph_models() method of  capture_features.py to improve training quality.
+*Note:* a color histogram can be used to obtain features for identifying objects in a segmented point cloud and a classifier trained on this feature set to recognize some object of interest in the point cloud.
+
+An HSV color space is used, as opposed to an RGB, as it is more resistant to lighting changes and more suited to perception tasks in robotics. A range of [0, 256] and [-1, 1] is used for computing the color and normal histograms respectively with 32 bins used for each which results in reasonable accuracy without overfitting. The HSV histograms are concatenated into a single feature vector and normalized. A SVM (Support Vector Machine) algorithm is trained on the captured features with over 1000 camera shots used resulting in a training accuracy of 88%.
+
+<img src="figures/svm_train_result.png" alt="" width="66%">
 
 Confusion matrices from training:
 
@@ -89,7 +87,7 @@ Confusion matrices from training:
 <img src="figures/normalized_confusion_matrix.png" alt="" width="65%">
 
 ### Results
-Object recognition results from test worlds 1, 2 and 3 respectively are shown below. All objects from each of the three world scenes is identified. 
+The output yaml files 1, 2, 3 correspond to test worlds 1, 2 and 3 respectively. Object recognition results from these test worlds are shown below. All objects in test1.world and test2.world are correctly classified. Only 1 object in test3.world, sticky_notes, is sometimes misclassified as soap2.
 <br>
 <img src="figures/RViz_test_1_world.png" alt="" width="">
 <br>
@@ -98,5 +96,5 @@ Object recognition results from test worlds 1, 2 and 3 respectively are shown be
 <img src="figures/RViz_test_3_world.png" alt="" width="">
 
 ### Improvements
-Training can be improved by tuning the SVM parameters such as number of model snapshots. The project can be expanded by implementing pick-and-place kinematics.
+By using hsv color histograms and increasing the number of training iteration to 1000, an 88% accuracy is achieved from the classifier. It can be observed from the normalized confusion matrix that the lowest object-recognition accuracy results from stick_notes which are correctly classified 83% of the time whilst remaining times often misclassified as glue or soap2. Since the aforementioned objects appear similar in shape and dimensions more so than other objects in the scene, increasing the number of training iterations should help improve the accuracy of the model, as would more noise filtering in the perception pipeline. The project should also be expanded by implementing PR2 pick-and-place operation.
    
